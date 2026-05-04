@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TheSilence Bot Dashboard</title>
+    <style>
+      :root {
+        --bg: #0f172a;
+        --panel: #1e293b;
+        --border: #334155;
+        --text: #e2e8f0;
+        --muted: #94a3b8;
+        --accent: #22c55e;
+        --accent-hover: #16a34a;
+        --danger: #ef4444;
+        --danger-hover: #dc2626;
+        --warn: #f59e0b;
+        --warn-hover: #d97706;
+      }
+
+      * { box-sizing: border-box; }
+      body {
+        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+      }
+
+      .container {
+        width: 100%;
+        max-width: 800px;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 28px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+      }
+
+      h1 {
+        margin: 0 0 4px;
+        font-size: 22px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      h1 .dot {
+        width: 10px; height: 10px; border-radius: 50%;
+        background: #64748b;
+        box-shadow: 0 0 0 3px rgba(100,116,139,0.2);
+        transition: background 0.2s, box-shadow 0.2s;
+      }
+      h1 .dot.online  { background: var(--accent); box-shadow: 0 0 0 3px rgba(34,197,94,0.25); }
+      h1 .dot.warn    { background: var(--warn);   box-shadow: 0 0 0 3px rgba(245,158,11,0.25); }
+      h1 .dot.offline { background: var(--danger); box-shadow: 0 0 0 3px rgba(239,68,68,0.25); }
+
+      .subtitle { color: var(--muted); font-size: 14px; margin-bottom: 20px; }
+
+      .status {
+        background: #0b1220;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 14px 16px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 13px;
+        margin-bottom: 16px;
+      }
+      .status .label { color: var(--muted); }
+
+      .buttons { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+      button {
+        padding: 10px 18px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        border: none;
+        border-radius: 6px;
+        color: white;
+        transition: background 0.15s ease;
+      }
+      button:disabled { opacity: 0.5; cursor: not-allowed; }
+      .btn-start    { background: var(--accent); }
+      .btn-start:hover:not(:disabled)    { background: var(--accent-hover); }
+      .btn-stop     { background: var(--danger); }
+      .btn-stop:hover:not(:disabled)     { background: var(--danger-hover); }
+      .btn-reconnect{ background: var(--warn); }
+      .btn-reconnect:hover:not(:disabled){ background: var(--warn-hover); }
+
+      .chat-section {
+        background: #0b1220;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 14px 16px;
+        margin-bottom: 16px;
+      }
+
+      .chat-section h3 {
+        margin: 0 0 12px;
+        font-size: 14px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .chat-input-group {
+        display: flex;
+        gap: 8px;
+      }
+
+      .chat-input-group input {
+        flex: 1;
+        padding: 8px 12px;
+        background: #1e293b;
+        border: 1px solid var(--border);
+        color: var(--text);
+        border-radius: 4px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 13px;
+      }
+
+      .chat-input-group input:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px rgba(34,197,94,0.1);
+      }
+
+      .chat-input-group button {
+        padding: 8px 16px;
+        font-size: 13px;
+      }
+
+      .log-title { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+      #log {
+        background: #0b1220;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 12px 14px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 12px;
+        line-height: 1.5;
+        height: 280px;
+        overflow-y: auto;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      #log .stamp { color: var(--muted); }
+
+      .info-box {
+        background: rgba(34,197,94,0.1);
+        border: 1px solid var(--accent);
+        border-radius: 6px;
+        padding: 12px;
+        font-size: 13px;
+        margin-bottom: 16px;
+      }
+      .info-box strong { color: var(--accent); }
+    </style>
+    <script src="/socket.io/socket.io.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <h1><span id="dot" class="dot"></span>TheSilence Bot Dashboard</h1>
+      <div class="subtitle">Minecraft 1.21+ Auto-Bot with eating, respawning & commands</div>
+
+      <div class="info-box">
+        <strong>🤖 Features:</strong> Auto-register/login, auto-eat from hotbar, auto-respawn, anti-AFK, command support
+      </div>
+
+      <div class="status">
+        <div><span class="label">Status:</span> <span id="botStatus">idle</span></div>
+        <div><span class="label">Server:</span> <span id="botServer">—</span></div>
+      </div>
+
+      <div class="buttons">
+        <button class="btn-start"     id="btnStart"    >Start Bot</button>
+        <button class="btn-stop"      id="btnStop"     >Stop Bot</button>
+        <button class="btn-reconnect" id="btnReconnect">Reconnect</button>
+      </div>
+
+      <div class="chat-section">
+        <h3>Chat & Commands</h3>
+        <div class="chat-input-group">
+          <input type="text" id="chatInput" placeholder="Send commands or chat (e.g., /warp spawn or /say hello)" />
+          <button id="btnSend" class="btn-start">Send</button>
+        </div>
+      </div>
+
+      <div class="log-title">Recent activity</div>
+      <div id="log"></div>
+    </div>
+
+    <script>
+      const socket = io();
+      const dot       = document.getElementById('dot');
+      const statusEl  = document.getElementById('botStatus');
+      const serverEl  = document.getElementById('botServer');
+      const logEl     = document.getElementById('log');
+      const chatInput = document.getElementById('chatInput');
+      const btnSend   = document.getElementById('btnSend');
+
+      function setDot(state) {
+        dot.classList.remove('online', 'warn', 'offline');
+        if (state) dot.classList.add(state);
+      }
+
+      function appendLog(msg) {
+        const stamp = new Date().toLocaleTimeString();
+        const line = document.createElement('div');
+        line.innerHTML = '<span class="stamp">[' + stamp + ']</span> ' + msg;
+        logEl.appendChild(line);
+        logEl.scrollTop = logEl.scrollHeight;
+        while (logEl.childElementCount > 200) logEl.removeChild(logEl.firstChild);
+      }
+
+      socket.on('bot_status', (payload) => {
+        // Backwards compatible: payload may be a string or { state, message, server }
+        if (typeof payload === 'string') {
+          statusEl.innerText = payload;
+          appendLog(payload);
+          return;
+        }
+        if (payload.message) { statusEl.innerText = payload.message; appendLog(payload.message); }
+        if (payload.server)  { serverEl.innerText = payload.server; }
+        if (payload.state)   { setDot(payload.state); }
+      });
+
+      document.getElementById('btnStart').onclick     = () => socket.emit('control_bot', 'start');
+      document.getElementById('btnStop').onclick      = () => socket.emit('control_bot', 'stop');
+      document.getElementById('btnReconnect').onclick = () => socket.emit('control_bot', 'reconnect');
+
+      // Chat input
+      function sendChat() {
+        const message = chatInput.value.trim();
+        if (message) {
+          socket.emit('send_chat', message);
+          appendLog(`[Dashboard] Sent: ${message}`);
+          chatInput.value = '';
+        }
+      }
+
+      btnSend.onclick = sendChat;
+      chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendChat();
+      });
+
+      // Auto-start the bot the first time the dashboard is opened.
+      window.addEventListener('load', () => socket.emit('control_bot', 'start'));
+    </script>
+  </body>
+</html>
