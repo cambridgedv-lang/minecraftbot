@@ -1,0 +1,20 @@
+{
+  "name": "minecraftbot",
+  "version": "1.0.0",
+  "description": "Minecraft Java Edition bot (1.21+) built with mineflayer. Supports auto-eat, auto-respawn, commands, registration, login, and a web dashboard.",
+  "main": "index.js",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "mineflayer": "^4.37.0",
+    "mineflayer-pathfinder": "^2.4.5",
+    "socket.io": "^4.8.1"
+  },
+  "license": "MIT"
+}
