@@ -24,6 +24,7 @@
     "registerCommand": "/register silencity22 silencity22",
     "loginCommand": "/login silencity22",
     "afterLoginCommands": [
+      "/server survival",
       "/warp afk"
     ],
     "initialDelayMs": 2000,
